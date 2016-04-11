@@ -54,14 +54,14 @@
     </dependentAssembly>
   </dependency>
   <dependency>
-    <dependentAssembly dependencyType="install" allowDelayedBinding="true" codebase="WebsiteGenerator.exe" size="7576">
+    <dependentAssembly dependencyType="install" allowDelayedBinding="true" codebase="WebsiteGenerator.exe" size="8088">
       <assemblyIdentity name="WebsiteGenerator" version="1.0.0.0" language="neutral" processorArchitecture="msil" />
       <hash>
         <dsig:Transforms>
           <dsig:Transform Algorithm="urn:schemas-microsoft-com:HashTransforms.Identity" />
         </dsig:Transforms>
         <dsig:DigestMethod Algorithm="http://www.w3.org/2000/09/xmldsig#sha256" />
-        <dsig:DigestValue>ypjo9Nmrp8FdpgrsKv2h8MhYwccDFPfrXRaArZ+GrpQ=</dsig:DigestValue>
+        <dsig:DigestValue>tI5P+lgyFvGRnmE4eVbu5XL+N8blY8vNrKZ7Xm4mgKg=</dsig:DigestValue>
       </hash>
     </dependentAssembly>
   </dependency>

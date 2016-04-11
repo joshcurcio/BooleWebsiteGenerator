@@ -49,8 +49,52 @@ namespace WebsiteGenerator
                 System.IO.Directory.CreateDirectory(subPath);
                 Console.WriteLine("here");
 
-            }
+                using (ServerManager mgr = new ServerManager())
+                {
+                    Site site = mgr.Sites[siteName];
+                    if (site != null)
+                        return; // Site bestaat al
 
+                    ApplicationPool appPool = mgr.ApplicationPools[applicationPoolName];
+                    if (appPool == null)
+                        throw new Exception(String.Format("Application Pool: { 0 } does not exist.", applicationPoolName));
+
+                    foreach (Site mysite in mgr.Sites)
+                    {
+                        if (mysite.Id > highestId)
+                            highestId = mysite.Id;
+                    }
+                    highestId++;
+
+                    site = mgr.Sites.CreateElement();
+                    site.SetAttributeValue("name", siteName);
+                    site.Id = highestId;
+                    site.Bindings.Clear();
+
+                    string bind = ipAddress + ":" + tcpPort + ":" + hostHeader;
+
+                    Binding binding = site.Bindings.CreateElement();
+                    binding.Protocol = "http";
+                    binding.BindingInformation = bind;
+                    site.Bindings.Add(binding);
+                    //site.Bindings.Add(bind, "http");
+
+                    Application app = site.Applications.CreateElement();
+                    app.Path = applicationPath;
+                    app.ApplicationPoolName = applicationPoolName;
+                    VirtualDirectory vdir = app.VirtualDirectories.CreateElement();
+                    vdir.Path = virtualDirectoryPath;
+                    vdir.PhysicalPath = virtualDirectoryPhysicalPath;
+                    app.VirtualDirectories.Add(vdir);
+                    site.Applications.Add(app);
+
+                    mgr.Sites.Add(site);
+                    mgr.CommitChanges();
+
+                    Console.WriteLine("website for " + siteName + " was created");
+                }
+            }
+            
             file.Close();
             Console.WriteLine("There were {0} lines.", count);
             // Suspend the screen.
@@ -59,50 +103,7 @@ namespace WebsiteGenerator
 
         void createSite()
         {
-            using (ServerManager mgr = new ServerManager())
-            {
-                Site site = mgr.Sites[siteName];
-                if (site != null)
-                    return; // Site bestaat al
-
-                ApplicationPool appPool = mgr.ApplicationPools[applicationPoolName];
-                if (appPool == null)
-                    throw new Exception(String.Format("Application Pool: { 0 } does not exist.", applicationPoolName));
-
-                foreach (Site mysite in mgr.Sites)
-                {
-                    if (mysite.Id > highestId)
-                        highestId = mysite.Id;
-                }
-                highestId++;
-
-                site = mgr.Sites.CreateElement();
-                site.SetAttributeValue("name", siteName);
-                site.Id = highestId;
-                site.Bindings.Clear();
-
-                string bind = ipAddress + ":" + tcpPort + ":" + hostHeader;
-
-                Binding binding = site.Bindings.CreateElement();
-                binding.Protocol = "http";
-                binding.BindingInformation = bind;
-                site.Bindings.Add(binding);
-                //site.Bindings.Add(bind, "http");
-
-                Application app = site.Applications.CreateElement();
-                app.Path = applicationPath;
-                app.ApplicationPoolName = applicationPoolName;
-                VirtualDirectory vdir = app.VirtualDirectories.CreateElement();
-                vdir.Path = virtualDirectoryPath;
-                vdir.PhysicalPath = virtualDirectoryPhysicalPath;
-                app.VirtualDirectories.Add(vdir);
-                site.Applications.Add(app);
-
-                mgr.Sites.Add(site);
-                mgr.CommitChanges();
-
-                Console.WriteLine("website for " + siteName + " was created");
-            }
+            
         }
     }
 }
