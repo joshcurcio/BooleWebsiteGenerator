@@ -51,26 +51,34 @@ namespace WebsiteGenerator
 
                 using (ServerManager mgr = new ServerManager())
                 {
-                    Site site = mgr.Sites[siteName];
+                    Console.WriteLine("here1");
+                    Site site = mgr.Sites["sitename" + j];
+                    //error is here ------ below
                     if (site != null)
+                    { 
+                        Console.WriteLine(site);
+                        Console.ReadLine();
                         return; // Site bestaat al
-
+                    }
+                    Console.WriteLine("here2");
                     ApplicationPool appPool = mgr.ApplicationPools[applicationPoolName];
                     if (appPool == null)
                         throw new Exception(String.Format("Application Pool: { 0 } does not exist.", applicationPoolName));
-
+                    Console.WriteLine("here3");
                     foreach (Site mysite in mgr.Sites)
                     {
                         if (mysite.Id > highestId)
                             highestId = mysite.Id;
+                        Console.WriteLine("here4" + mysite.Id);
                     }
                     highestId++;
 
+                    Console.WriteLine("here5");
                     site = mgr.Sites.CreateElement();
                     site.SetAttributeValue("name", siteName);
                     site.Id = highestId;
                     site.Bindings.Clear();
-
+                    Console.WriteLine("here 6");
                     string bind = ipAddress + ":" + tcpPort + ":" + hostHeader;
 
                     Binding binding = site.Bindings.CreateElement();
@@ -78,7 +86,7 @@ namespace WebsiteGenerator
                     binding.BindingInformation = bind;
                     site.Bindings.Add(binding);
                     //site.Bindings.Add(bind, "http");
-
+                    Console.WriteLine("here 7");
                     Application app = site.Applications.CreateElement();
                     app.Path = applicationPath;
                     app.ApplicationPoolName = applicationPoolName;
@@ -87,11 +95,12 @@ namespace WebsiteGenerator
                     vdir.PhysicalPath = virtualDirectoryPhysicalPath;
                     app.VirtualDirectories.Add(vdir);
                     site.Applications.Add(app);
-
+                    Console.WriteLine("here8");
                     mgr.Sites.Add(site);
                     mgr.CommitChanges();
 
                     Console.WriteLine("website for " + siteName + " was created");
+
                 }
             }
             
@@ -99,11 +108,6 @@ namespace WebsiteGenerator
             Console.WriteLine("There were {0} lines.", count);
             // Suspend the screen.
             Console.ReadLine();
-        }
-
-        void createSite()
-        {
-            
         }
     }
 }
