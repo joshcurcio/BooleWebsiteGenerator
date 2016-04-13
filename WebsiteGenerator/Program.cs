@@ -11,96 +11,71 @@ namespace WebsiteGenerator
 {
     class Program
     {
-       static void Main(string[] args)
+        static ServerManager serverMgr = new ServerManager();
+
+        static void Main(string[] args)
        {
             
             string line = "";
-            int count = File.ReadLines(@"c:\\Users\\Josh31\\Desktop\\test.txt").Count();
+            //file where f00#'s are
+            int count = File.ReadLines(@"c:\\Users\\csc313\\Desktop\\WebsitesToBeGenerated.txt").Count();
+
             //take in from text file
-            System.IO.StreamReader file = new System.IO.StreamReader("c:\\Users\\Josh31\\Desktop\\test.txt");
+            System.IO.StreamReader file = new System.IO.StreamReader("c:\\Users\\csc313\\Desktop\\WebsitesToBeGenerated.txt");
 
             //read each line from file
             //reads does this for each username (F00 #)
-            string[] usernames = new string[File.ReadLines(@"c:\\Users\\Josh31\\Desktop\\test.txt").Count()];
-            while ((line = file.ReadLine()) != null)
+            string[] usernames = new string[count];
+
+            //input each line from the file to a string array
+            for (int i = 0; i <= count; i++)
             {
-                int i = 0;
-                Console.WriteLine(line);
+                line = file.ReadLine();
                 usernames[i] = line;
-                i++;
             }
 
-            for(int j = 0; j < count; j++)
+            for(int j = 0; j <= count; j++)
             {
-                Console.WriteLine(usernames[j]);
+                
+                Console.WriteLine(usernames[j] + " ----------    "+ j + " ---------------------");
                 string siteName = usernames[j];
 
                 string applicationPoolName = "DefaultAppPool";
-                string virtualDirectoryPath = "/";
-                string virtualDirectoryPhysicalPath = "C:\\inetpub\\wwwroot";
+                string virtualDirectoryPhysicalPath = "C:\\inetpub\\wwwroot\\";
                 string ipAddress = "*";
                 string tcpPort = "81";
                 string hostHeader = "";
-                string applicationPath = "/";
-                long highestId = 1;
 
+                //create folder for each website
                 string subPath = virtualDirectoryPhysicalPath + "\\" + siteName; // your code goes here
-
                 System.IO.Directory.CreateDirectory(subPath);
-                Console.WriteLine("here");
-
-                using (ServerManager mgr = new ServerManager())
+            
+                
+                try
                 {
-                    Console.WriteLine("here1");
-                    Site site = mgr.Sites["sitename" + j];
-                    //error is here ------ below
-                    if (site != null)
-                    { 
-                        Console.WriteLine(site);
-                        Console.ReadLine();
-                        return; // Site bestaat al
-                    }
-                    Console.WriteLine("here2");
-                    ApplicationPool appPool = mgr.ApplicationPools[applicationPoolName];
-                    if (appPool == null)
-                        throw new Exception(String.Format("Application Pool: { 0 } does not exist.", applicationPoolName));
-                    Console.WriteLine("here3");
-                    foreach (Site mysite in mgr.Sites)
+                    string bindinginfo = ipAddress + tcpPort + hostHeader;
+
+                    //check if website name already exists in IIS
+                    Boolean bWebsite = IsWebsiteExists(siteName);
+
+                    if (!bWebsite)
                     {
-                        if (mysite.Id > highestId)
-                            highestId = mysite.Id;
-                        Console.WriteLine("here4" + mysite.Id);
+                        //create a website 
+                        Site mySite = serverMgr.Sites.Add(siteName, "http", bindinginfo, "C:\\inetpub\\wwwroot\\" +siteName);
+                        mySite.ApplicationDefaults.ApplicationPoolName = applicationPoolName;
+                        mySite.TraceFailedRequestsLogging.Enabled = true;
+                        mySite.TraceFailedRequestsLogging.Directory = virtualDirectoryPhysicalPath;
+                        serverMgr.CommitChanges();
+                        Console.WriteLine("New website  " + siteName + " added sucessfully");
                     }
-                    highestId++;
-
-                    Console.WriteLine("here5");
-                    site = mgr.Sites.CreateElement();
-                    site.SetAttributeValue("name", siteName);
-                    site.Id = highestId;
-                    site.Bindings.Clear();
-                    Console.WriteLine("here 6");
-                    string bind = ipAddress + ":" + tcpPort + ":" + hostHeader;
-
-                    Binding binding = site.Bindings.CreateElement();
-                    binding.Protocol = "http";
-                    binding.BindingInformation = bind;
-                    site.Bindings.Add(binding);
-                    //site.Bindings.Add(bind, "http");
-                    Console.WriteLine("here 7");
-                    Application app = site.Applications.CreateElement();
-                    app.Path = applicationPath;
-                    app.ApplicationPoolName = applicationPoolName;
-                    VirtualDirectory vdir = app.VirtualDirectories.CreateElement();
-                    vdir.Path = virtualDirectoryPath;
-                    vdir.PhysicalPath = virtualDirectoryPhysicalPath;
-                    app.VirtualDirectories.Add(vdir);
-                    site.Applications.Add(app);
-                    Console.WriteLine("here8");
-                    mgr.Sites.Add(site);
-                    mgr.CommitChanges();
-
-                    Console.WriteLine("website for " + siteName + " was created");
-
+                    else
+                    {
+                        Console.WriteLine("Name should be unique, " + siteName + "  already exists. ");
+                    }
+                }
+                catch (Exception ae)
+                {
+                    Console.WriteLine(ae.Message);
                 }
             }
             
@@ -109,5 +84,27 @@ namespace WebsiteGenerator
             // Suspend the screen.
             Console.ReadLine();
         }
+
+        public static bool IsWebsiteExists(string strWebsitename)
+        {
+            Boolean flagset = false;
+            SiteCollection sitecollection = serverMgr.Sites;
+
+            //checks to see if the site name given already exists
+            foreach (Site site in sitecollection)
+            {
+                if (site.Name == strWebsitename.ToString())
+                {
+                    flagset = true;
+                    break;
+                }
+                else
+                {
+                    flagset = false;
+                }
+            }
+            return flagset;
+        }
+
     }
 }
